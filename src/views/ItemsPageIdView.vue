@@ -107,6 +107,16 @@
       <v-divider />
     </v-card>
 
+    <div
+      class="centered-content"
+      v-if="isLoadingRequest == false && !items.length"
+    >
+      <div>
+        <h1 class="text-h4 font-weight-bold mb-1">No data...</h1>
+        <p>Items data cannot be found at the moment</p>
+      </div>
+    </div>
+
     <v-pagination
       v-model="currentPage"
       :active-color="'primary'"
@@ -510,5 +520,13 @@ onMounted(() => {
     0.8
   ); /* Optional: semi-transparent background */
   z-index: 9999; /* Ensure it's on top of other elements */
+}
+
+.centered-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh; /* Full viewport height */
+  text-align: center;
 }
 </style>

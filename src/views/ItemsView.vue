@@ -90,6 +90,16 @@
       <v-divider />
     </v-card>
 
+    <div
+      class="centered-content"
+      v-if="isLoadingRequest == false && !items.length"
+    >
+      <div>
+        <h1 class="text-h4 font-weight-bold mb-1">No data...</h1>
+        <p>Items data cannot be found at the moment</p>
+      </div>
+    </div>
+
     <v-pagination
       v-model="currentPage"
       :active-color="'primary'"
@@ -230,7 +240,7 @@
 <script setup>
 /* eslint-disable */
 
-import { ref, reactive, onMounted , computed} from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import AddDataDialogue from "@/components/AddDataDialogue.vue";
 import axios from "@/utils/axiosConfig";
 import { useRouter } from "vue-router";
@@ -525,3 +535,14 @@ onMounted(() => {
   fetchSelectData();
 });
 </script>
+
+
+<style scoped>
+.centered-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh; /* Full viewport height */
+  text-align: center;
+}
+</style>

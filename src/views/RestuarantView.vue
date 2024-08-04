@@ -46,7 +46,6 @@
       v-if="loading == false && !restaurants.length"
     >
       <div>
-        <div class="text-h4">&#9785;</div>
         <h1 class="text-h4 font-weight-bold mb-1">No data</h1>
         <p>Restaurant data cannot be found at the moment</p>
       </div>
