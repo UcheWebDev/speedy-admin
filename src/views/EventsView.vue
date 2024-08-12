@@ -33,14 +33,36 @@
         <v-card class="mx-auto" max-width="400" flat>
           <v-img :src="event.ticket_img_url" height="200px" cover></v-img>
           <v-card-title>{{ event.event_name }}</v-card-title>
-          <v-card-subtitle>{{
-            formatEventDate(event.event_start_date, event.event_end_date)
-          }}</v-card-subtitle>
+          <div class="d-flex justify-content-space-between">
+            <v-card-subtitle>{{
+              formatEventDate(event.event_start_date, event.event_end_date)
+            }}</v-card-subtitle>
+
+            <!-- <v-card-subtitle> {{ event.event_end_time }}</v-card-subtitle> -->
+          </div>
+          <v-divider class="mx-4 mb-1 mt-3"></v-divider>
+
           <v-card-text>
-            <p>Available Tickets: {{ event.available_tickets }}</p>
-            <p>Price: ${{ event.price }}</p>
-            <p>Phone Number: {{ event.phone_number }}</p>
-            <p>Address: {{ event.event_address }}</p>
+            <div class="d-flex justify-content-space-between">
+              <div class="mb-2 mr-4">
+                Available Tickets: {{ event.available_tickets }}
+              </div>
+              <div class="mb-2">Price: ${{ event.price }}</div>
+            </div>
+            <div class="d-flex justify-content-space-between">
+              <div class="mb-2 mr-4">
+                Start Time : {{ event.event_start_time }}
+              </div>
+              <div class="mb-2">End Time : {{ event.event_end_time }}</div>
+            </div>
+            <div class="d-flex justify-content-space-between">
+              <div class="mb-2 mr-4">
+                <p>Phone: {{ event.phone_number }}</p>
+              </div>
+              <div class="mb-2">
+                <p>Address: {{ event.event_address }}</p>
+              </div>
+            </div>
             <v-chip-group>
               <v-chip
                 v-for="type in JSON.parse(event.ticket_types)"
@@ -108,10 +130,30 @@
 
             <v-col cols="12" md="6">
               <v-text-field
+                v-model="formData.event_start_time"
+                label="Event Start Time"
+                :rules="dateRules"
+                type="time"
+                required
+              ></v-text-field>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-text-field
                 v-model="formData.event_end_date"
                 label="Event End Date"
                 :rules="endDateRules"
                 type="date"
+                required
+              ></v-text-field>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-text-field
+                v-model="formData.event_end_time"
+                label="Event End Time"
+                :rules="dateRules"
+                type="time"
                 required
               ></v-text-field>
             </v-col>
@@ -166,11 +208,13 @@
                 v-model="formData.ticket_types"
                 :items="ticketTypeOptions"
                 label="Ticket Types"
+                :prepend-icon="extraField ? 'mdi-minus' : 'mdi-plus'"
+                @click:prepend="addExtraInformation"
                 multiple
                 required
               ></v-select>
             </v-col>
-            <v-col cols="12" md="6" v-if="!formData.id">
+            <v-col cols="12" md="6">
               <v-file-input
                 v-model="formData.event_image"
                 label="Upload Event Photo"
@@ -180,6 +224,14 @@
                 @change="onFilePicked"
                 required
               ></v-file-input>
+            </v-col>
+            <v-col cols="12" md="12" v-if="extraField">
+              <v-text-field
+                label="Add extra table type"
+                v-model="extraTicketInfo"
+                append-icon="mdi-send-variant-outline"
+                @click:append="addToSelections"
+              ></v-text-field>
             </v-col>
           </v-row>
         </v-container>
@@ -259,10 +311,12 @@ const valid = ref(false);
 const loading = ref(true);
 const isLoadingRequest = ref(false);
 const selectedDataId = ref(null);
+const extraField = ref(false);
 
 const isEditMode = ref(false);
 const dialogTitle = ref("Add Event");
 const dialogButton = ref("Save");
+const icon = extraField.value ? "mdi-minus" : "mdi-plus";
 
 const snackbar = reactive({
   show: false,
@@ -275,6 +329,8 @@ const formData = ref({
   event_name: "",
   event_start_date: "",
   event_end_date: "",
+  event_start_time: "",
+  event_end_time: "",
   location: "",
   available_tickets: "",
   price: "",
@@ -286,12 +342,16 @@ const formData = ref({
   eventImgUrl: null,
 });
 
+const extraTicketInfo = ref(null);
+
 const resetForm = () => {
   formData.value = {
     id: null,
     event_name: "",
     event_start_date: "",
     event_end_date: "",
+    event_start_time: "",
+    event_end_time: "",
     location: "",
     available_tickets: "",
     price: "",
@@ -321,7 +381,7 @@ const phoneRules = [
   (v) => v.length <= 20 || "Phone number is too long",
 ];
 const addressRules = [(v) => !!v || "Event address is required"];
-const ticketTypeOptions = ["General Admission", "VIP", "Early Bird"]; // Example options, adjust as needed
+const ticketTypeOptions = ref(["General Admission", "VIP", "Early Bird"]);
 
 const handleClose = () => {
   dialog.value = false;
@@ -338,12 +398,15 @@ const openDialog = (event = null) => {
     formData.value.event_start_date = event.event_start_date;
     formData.value.event_start_date = event.event_start_date;
     formData.value.event_end_date = event.event_end_date;
+    formData.value.event_end_time = event.event_end_time;
+    formData.value.event_start_time = event.event_start_time;
     formData.value.location = event.location;
     formData.value.available_tickets = event.available_tickets;
     formData.value.price = event.price;
     formData.value.phone_number = event.phone_number;
     formData.value.event_address = event.event_address;
     formData.value.eventImgUrl = event.ticket_img_url;
+    formData.value.event_imageFile = null;
     formData.value.ticket_types = JSON.parse(event.ticket_types);
   } else {
     isEditMode.value = false;
@@ -385,7 +448,7 @@ const saveEvent = async () => {
   try {
     const payLoad = createFormData(formData.value);
     if (formData.value.id) {
-      await editEventDataHttpRequest(formData.value.id, formData.value);
+      await editEventDataHttpRequest(formData.value.id, payLoad);
       snackbar.message = "Updated successfully!";
     } else {
       await saveNewEvent(payLoad);
@@ -413,6 +476,17 @@ const confirmDeleteEvent = async () => {
     snackbar.message = "Error deleting data!";
     snackbar.show = true;
   }
+};
+
+const addExtraInformation = () => {
+  extraField.value = !extraField.value;
+};
+
+const addToSelections = () => {
+  ticketTypeOptions.value.push(extraTicketInfo.value);
+  extraTicketInfo.value = "";
+  snackbar.message = "Table Type added !";
+  snackbar.show = true;
 };
 
 /* image validation */

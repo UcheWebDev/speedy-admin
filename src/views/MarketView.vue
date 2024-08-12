@@ -260,6 +260,7 @@ import {
 
 import DataCard from "@/components/DataCard.vue";
 import AddDataDialogue from "@/components/AddDataDialogue.vue";
+import { createFormData } from "@/utils/formData";
 
 const query = ref("");
 const suggestions = ref([]);
@@ -293,7 +294,7 @@ const RequestDialog = ref(false);
 const valid = ref(false);
 const form = ref(null);
 const liveLocationSwitch = ref(false);
-
+const isEditMode = ref(false);
 const selectedDataId = ref(null);
 
 const formData = ref({
@@ -302,7 +303,7 @@ const formData = ref({
   phone_number: "",
   market_image_name: null,
   market_imageFile: null,
-  placeId: "",
+  place_id: "",
   market_ratings: 0,
 });
 
@@ -349,7 +350,6 @@ const handleClose = () => {
   dialog.value = false;
   UpdateDialog.value = false;
   resetForm();
-  resetUpdateForm();
 };
 
 const resetForm = () => {
@@ -359,22 +359,9 @@ const resetForm = () => {
     phone_number: "",
     market_image_name: null,
     market_imageFile: null,
-    placeId: "",
-    market_ratings: 0,
-  };
-};
-
-const resetUpdateForm = () => {
-  updateFormData.value = ref({
-    market_name: "",
-    market_location: "",
-    phone_number: "",
-    market_image_name: null,
-    market_imageFile: null,
     place_id: "",
     market_ratings: 0,
-    id: null,
-  });
+  };
 };
 
 const onClearLocationField = () => {
@@ -396,32 +383,15 @@ const fetchmarketData = async () => {
 const savemarketData = async () => {
   isLoadingRequest.value = true;
   try {
-    console.log(formData.value.market_imageFile);
-    let fd = new FormData();
-    fd.append("market_imageFile", formData.value.market_imageFile);
-    fd.append("market_name", formData.value.market_name);
-    fd.append("market_location", formData.value.market_location);
-    fd.append("phone_number", formData.value.phone_number);
-    fd.append("place_id", formData.value.placeId);
-    fd.append("market_ratings", formData.value.market_ratings);
-
-    await savemarket(fd);
-    snackbar.message = "Added successfully!";
+    const payLoad = createFormData(formData.value);
+    if (formData.value.id) {
+      await updatemarketRequest(formData.value.id, payLoad);
+      snackbar.message = "Updated successfully!";
+    } else {
+      await savemarket(payLoad);
+      snackbar.message = "Added successfully!";
+    }
     snackbar.show = true;
-    fetchmarketData();
-  } catch (error) {
-    errorHandler.handle(error);
-  } finally {
-    isLoadingRequest.value = false;
-  }
-};
-
-const updateResturantData = async () => {
-  isLoadingRequest.value = true;
-  console.log(updateFormData.value.place_id);
-  try {
-    isLoadingRequest.value = false;
-    await updatemarketRequest(updateFormData.value);
     fetchmarketData();
   } catch (error) {
     errorHandler.handle(error);
@@ -446,21 +416,20 @@ const deletemarketData = (id) => {
 };
 
 const editRestuarantDetails = (data) => {
-  // selectedDataId.value = id;
-  updateFormData.value.market_name = data.name;
-  updateFormData.value.market_location = data.location;
-  updateFormData.value.phone_number = data.phone;
-  updateFormData.value.place_id = data.placeId;
-  updateFormData.value.market_ratings = data.rating;
-  updateFormData.value.id = data.id;
-
-  UpdateDialog.value = true;
-  console.log(data);
-};
-
-const reserve = () => {
-  loading.value = true;
-  setTimeout(() => (loading.value = false), 2000);
+  if (data && data.name) {
+    isEditMode.value = true;
+    formData.value.id = data.id;
+    formData.value.market_name = data.name;
+    formData.value.market_imageFile = null;
+    formData.value.market_location = data.location;
+    formData.value.phone_number = data.phone;
+    formData.value.place_id = data.place_id;
+    formData.value.market_ratings = data.rating;
+  } else {
+    isEditMode.value = false;
+    resetForm();
+  }
+  dialog.value = true;
 };
 
 /* map functions */
@@ -503,25 +472,13 @@ const selectSuggestion = (suggestion) => {
     { placeId: suggestion.place_id },
     (place, status) => {
       if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-        if (updateFormData.value.id) {
-          console.log("updating form");
-          updateFormData.value.market_location = place.formatted_address;
-          updateFormData.value.market_name = place ? place.name : "";
-          updateFormData.value.place_id = place ? place.place_id : "";
-          updateFormData.value.phone_number = place
-            ? place.formatted_phone_number
-            : "";
-          updateFormData.value.market_ratings = place ? place.rating : 0;
-        } else {
-          console.log(place);
-          formData.value.market_name = place ? place.name : "";
-          formData.value.phone_number = place
-            ? place.formatted_phone_number
-            : "";
-          formData.value.placeId = place ? place.place_id : "";
-          formData.value.market_ratings =
-            place && place.rating ? place.rating : 0;
-        }
+        formData.value.market_name = place ? place.name : "";
+        formData.value.phone_number = place ? place.formatted_phone_number : "";
+        formData.value.market_location = place ? place.formatted_address : "";
+
+        formData.value.place_id = place ? place.place_id : "";
+        formData.value.market_ratings =
+          place && place.rating !== undefined ? place.rating : 0;
       }
     }
   );

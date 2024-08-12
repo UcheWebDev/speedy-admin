@@ -55,7 +55,7 @@
         @submit.prevent="savepharmacy"
       >
         <v-file-input
-          v-model="formData.pharmacy_imageFile"
+          v-model="formData.img"
           label="Upload Resturant Photo"
           accept="image/jpeg, image/jpg, image/png"
           prepend-icon="mdi-camera"
@@ -121,83 +121,6 @@
       </v-form>
     </AddDataDialogue>
 
-    <!-- Update pharmacy Modal -->
-    <AddDataDialogue
-      v-model="UpdateDialog"
-      title="Update pharmacy"
-      @close="handleClose"
-    >
-      <v-form
-        ref="form"
-        v-model="valid"
-        lazy-validation
-        @submit.prevent="savepharmacy"
-      >
-        <v-text-field
-          v-model="updateFormData.pharmacy_name"
-          label="pharmacy Name"
-          :rules="nameRules"
-          required
-        ></v-text-field>
-
-        <!-- <v-text-field
-            v-model="updateFormData.restaurant_location"
-            label="Restaurant Location"
-            :rules="locationRules"
-            required
-          ></v-text-field> -->
-
-        <v-text-field
-          label="Type a restuarant name or address"
-          ref="autocompleteInput"
-          @input="onInput"
-          v-model="updateFormData.pharmacy_location"
-          :rules="locationRules"
-          clearable
-          @click:clear="onClearLocationField"
-        ></v-text-field>
-
-        <v-list v-if="suggestions.length">
-          <v-list-item
-            v-for="suggestion in suggestions"
-            :key="suggestion.place_id"
-            @click="selectSuggestion(suggestion)"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{
-                suggestion.description
-              }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-
-        <v-switch
-          class="mb-2"
-          color="primary"
-          v-model="liveLocationSwitch"
-          label="Use live location filter"
-          hide-details
-          inset
-        ></v-switch>
-
-        <v-text-field
-          v-model="updateFormData.phone_number"
-          label="Phone Number"
-          :rules="phoneRules"
-          required
-        ></v-text-field>
-        <!--submit btn-->
-        <v-btn
-          class="mt-2"
-          color="primary darken-1"
-          @click="updateResturantData"
-          :disabled="!valid || isLoadingRequest"
-        >
-          Update
-        </v-btn>
-      </v-form>
-    </AddDataDialogue>
-
     <!--snackbar -->
     <v-snackbar v-model="snackbar.show" :timeout="snackbar.timeout">
       {{ snackbar.message }}
@@ -257,6 +180,7 @@ import {
 
 import DataCard from "@/components/DataCard.vue";
 import AddDataDialogue from "@/components/AddDataDialogue.vue";
+import { createFormData } from "@/utils/formData";
 
 const query = ref("");
 const suggestions = ref([]);
@@ -290,6 +214,7 @@ const RequestDialog = ref(false);
 const valid = ref(false);
 const form = ref(null);
 const liveLocationSwitch = ref(false);
+const isEditMode = ref(false);
 
 const selectedDataId = ref(null);
 
@@ -299,19 +224,8 @@ const formData = ref({
   phone_number: "",
   pharmacy_image_name: null,
   pharmacy_imageFile: null,
-  placeId: "",
-  pharmacy_ratings: 0,
-});
-
-const updateFormData = ref({
-  pharmacy_name: "",
-  pharmacy_location: "",
-  phone_number: "",
-  pharmacy_image_name: null,
-  pharmacy_imageFile: null,
   place_id: "",
   pharmacy_ratings: 0,
-  id: null,
 });
 
 const nameRules = [
@@ -341,7 +255,6 @@ const handleClose = () => {
   dialog.value = false;
   UpdateDialog.value = false;
   resetForm();
-  resetUpdateForm();
 };
 
 const resetForm = () => {
@@ -351,22 +264,9 @@ const resetForm = () => {
     phone_number: "",
     pharmacy_image_name: null,
     pharmacy_imageFile: null,
-    placeId: "",
-    pharmacy_ratings: 0,
-  };
-};
-
-const resetUpdateForm = () => {
-  const updateFormData = ref({
-    pharmacy_name: "",
-    pharmacy_location: "",
-    phone_number: "",
-    pharmacy_image_name: null,
-    pharmacy_imageFile: null,
     place_id: "",
     pharmacy_ratings: 0,
-    id: null,
-  });
+  };
 };
 
 const onClearLocationField = () => {
@@ -388,32 +288,15 @@ const fetchPharmacyData = async () => {
 const savepharmacyData = async () => {
   isLoadingRequest.value = true;
   try {
-    console.log(formData.value.pharmacy_imageFile);
-    let fd = new FormData();
-    fd.append("pharmacy_imageFile", formData.value.pharmacy_imageFile);
-    fd.append("pharmacy_name", formData.value.pharmacy_name);
-    fd.append("pharmacy_location", formData.value.pharmacy_location);
-    fd.append("phone_number", formData.value.phone_number);
-    fd.append("place_id", formData.value.placeId);
-    fd.append("pharmacy_ratings", formData.value.pharmacy_ratings);
-
-    await savepharmacy(fd);
-    snackbar.message = "Added successfully!";
+    const payLoad = createFormData(formData.value);
+    if (formData.value.id) {
+      await updatePharmacyRequest(formData.value.id, payLoad);
+      snackbar.message = "Updated successfully!";
+    } else {
+      await savepharmacy(payLoad);
+      snackbar.message = "Added successfully!";
+    }
     snackbar.show = true;
-    fetchPharmacyData();
-  } catch (error) {
-    errorHandler.handle(error);
-  } finally {
-    isLoadingRequest.value = false;
-  }
-};
-
-const updateResturantData = async () => {
-  isLoadingRequest.value = true;
-  console.log(updateFormData.value.place_id);
-  try {
-    isLoadingRequest.value = false;
-    await updatePharmacyRequest(updateFormData.value);
     fetchPharmacyData();
   } catch (error) {
     errorHandler.handle(error);
@@ -443,21 +326,21 @@ const viewItemById = (itemId) => {
 };
 
 const editRestuarantDetails = (data) => {
-  // selectedDataId.value = id;
-  updateFormData.value.pharmacy_name = data.name;
-  updateFormData.value.pharmacy_location = data.location;
-  updateFormData.value.phone_number = data.phone;
-  updateFormData.value.place_id = data.placeId;
-  updateFormData.value.pharmacy_ratings = data.rating;
-  updateFormData.value.id = data.id;
-
-  UpdateDialog.value = true;
-  console.log(data);
-};
-
-const reserve = () => {
-  loading.value = true;
-  setTimeout(() => (loading.value = false), 2000);
+  if (data && data.name) {
+    isEditMode.value = true;
+    formData.value.id = data.id;
+    formData.value.pharmacy_name = data.name;
+    formData.value.pharmacy_imageFile = null;
+    formData.value.pharmacy_image_name = null;
+    formData.value.pharmacy_location = data.location;
+    formData.value.phone_number = data.phone;
+    formData.value.place_id = data.placeId;
+    formData.value.pharmacy_ratings = data.rating;
+  } else {
+    isEditMode.value = false;
+    resetForm();
+  }
+  dialog.value = true;
 };
 
 /* map functions */
@@ -500,25 +383,14 @@ const selectSuggestion = (suggestion) => {
     { placeId: suggestion.place_id },
     (place, status) => {
       if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-        if (updateFormData.value.id) {
-          console.log("updating form");
-          updateFormData.value.pharmacy_location = place.formatted_address;
-          updateFormData.value.pharmacy_name = place ? place.name : "";
-          updateFormData.value.place_id = place ? place.place_id : "";
-          updateFormData.value.phone_number = place
-            ? place.formatted_phone_number
-            : "";
-          updateFormData.value.pharmacy_ratings = place ? place.rating : 0;
-        } else {
-          console.log(place);
-          formData.value.pharmacy_name = place ? place.name : "";
-          formData.value.phone_number = place
-            ? place.formatted_phone_number
-            : "";
-          formData.value.placeId = place ? place.place_id : "";
-          formData.value.pharmacy_ratings =
-            place && place.rating ? place.rating : 0;
-        }
+        console.log(place);
+        formData.value.pharmacy_name = place ? place.name : "";
+        formData.value.phone_number = place ? place.formatted_phone_number : "";
+        formData.value.pharmacy_location = place ? place.formatted_address : "";
+
+        formData.value.place_id = place ? place.place_id : "";
+        formData.value.pharmacy_ratings =
+          place && place.rating !== undefined ? place.rating : 0;
       }
     }
   );

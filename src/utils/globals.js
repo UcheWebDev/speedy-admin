@@ -109,16 +109,16 @@ export const categories = ref([
 ]);
 
 
-export const foodTypes = [
+export const foodTypes = ref([
     'Soup',
     'Rice',
     'Protein',
     'Breakfast',
     'Chicken',
-    'Spaghetti',
+    'Pasta',
     'Pastries',
     'Pizza',
     'Drinks'
-];
+])
 
 

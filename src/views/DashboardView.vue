@@ -81,6 +81,8 @@ const stats = ref([
   { value: 0, label: "Total Supermarkets" },
   { value: 0, label: "Total riders" },
   { value: 0, label: "Total orders" },
+  { value: 0, label: "Total Hotels" },
+
 ]);
 const orders = ref([]);
 const headers = [
@@ -101,6 +103,8 @@ const getAnalytics = async () => {
       { value: data.totalRiders, label: "Total riders" },
       { value: data.totalOrders, label: "Total orders" },
       { value: data.totalCars, label: "Total cars" },
+      { value: data.totalHotels, label: "Total Hotels" },
+
     ];
     orders.value = data.orders;
     console.log(data);

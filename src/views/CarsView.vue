@@ -26,11 +26,12 @@
         <v-card class="mx-auto" max-width="400" flat>
           <v-img :src="car.car_img_url" height="200px" cover></v-img>
           <v-card-title>{{ car.car_name }}</v-card-title>
+          <v-divider class="mx-4 mb-1 mt-3"></v-divider>
 
           <v-card-text>
             <p class="mb-1">Model : {{ car.model }}</p>
             <p class="mb-1">Price: &#8358; {{ car.price }}</p>
-            <p>Extra Information:</p>
+            <p class="mt-2">Extra Information:</p>
             <p>
               {{
                 car && car.extra_information
@@ -43,7 +44,7 @@
                 type
               }}</v-chip>
             </v-chip-group>
-            <p>Ratings</p>
+            <p>Car Ratings</p>
             <v-rating
               :model-value="car.ratings"
               color="amber"
@@ -146,6 +147,8 @@
               <v-select
                 v-model="car.features"
                 :items="featuresOptions"
+                :prepend-icon="extraField ? 'mdi-minus' : 'mdi-plus'"
+                @click:prepend="addExtraInformation"
                 :rules="[rules.array]"
                 label="Features"
                 multiple
@@ -153,7 +156,7 @@
             </v-col>
           </v-row>
 
-          <v-row v-if="!car.id">
+          <v-row>
             <v-col cols="12" md="12">
               <v-file-input
                 v-model="car.image"
@@ -161,6 +164,17 @@
                 accept="image/*"
                 @change="onFilePicked"
               ></v-file-input>
+            </v-col>
+          </v-row>
+
+          <v-row>
+            <v-col cols="12" md="12" v-if="extraField">
+              <v-text-field
+                label="Add extra car features"
+                v-model="extraFeatures"
+                append-icon="mdi-send-variant-outline"
+                @click:append="addToSelections"
+              ></v-text-field>
             </v-col>
           </v-row>
         </v-container>
@@ -240,16 +254,18 @@ const valid = ref(false);
 const loading = ref(true);
 const isLoadingRequest = ref(false);
 const selectedDataId = ref(null);
+const extraFeatures = ref(null);
+const extraField = ref(false);
 
 const isEditMode = ref(false);
 const dialogTitle = ref("Add Event");
 const dialogButton = ref("Save");
-const featuresOptions = [
+const featuresOptions = ref([
   "Air Conditioning",
   "Leather Seats",
   "Sunroof",
   "Bluetooth",
-];
+]);
 
 const snackbar = reactive({
   show: false,
@@ -301,6 +317,17 @@ const handleClose = () => {
   resetForm();
 };
 
+const addExtraInformation = () => {
+  extraField.value = !extraField.value;
+};
+
+const addToSelections = () => {
+  featuresOptions.value.push(extraFeatures.value);
+  extraFeatures.value = "";
+  snackbar.message = "Extra Field added !";
+  snackbar.show = true;
+};
+
 const openDialog = (cars = null) => {
   if (cars && cars.car_name) {
     isEditMode.value = true;
@@ -311,6 +338,7 @@ const openDialog = (cars = null) => {
     car.value.model = cars.model;
     car.value.ratings = cars.ratings;
     car.value.price = cars.price;
+    car.value.car_imageFile = null;
     car.value.extra_information = cars.extra_information;
     car.value.features = JSON.parse(cars.features);
   } else {
@@ -353,7 +381,7 @@ const saveCar = async () => {
   try {
     const payLoad = createFormData(car.value);
     if (car.value.id) {
-      await editCarDataHttpRequest(car.value.id, car.value);
+      await editCarDataHttpRequest(car.value.id, payLoad);
       snackbar.message = "Updated successfully!";
     } else {
       await saveCarToServer(payLoad);

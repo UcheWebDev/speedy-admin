@@ -22,6 +22,10 @@ export class ErrorHandler {
                     this.snackbar.message = "Internal server error!";
                     this.snackbar.show = true;
                     break;
+                case 422:
+                    this.snackbar.message = "Validation error!";
+                    this.snackbar.show = true;
+                    break;
                 default:
                     this.snackbar.message = "An unexpected error occurred!";
                     this.snackbar.show = true;

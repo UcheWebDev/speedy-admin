@@ -28,9 +28,9 @@ export const deleteRestaurant = async (id) => {
     }
 };
 
-export const updateRestuarantHttpRequest = async (data) => {
+export const updateRestuarantHttpRequest = async (id, data) => {
     try {
-        await axios.put(`/admin/restaurants/${data.id}`, data);
+        await axios.post(`/admin/restaurants/${id}`, data);
     } catch (error) {
         console.error("Error deleting restaurant:", error);
         throw error;
@@ -66,9 +66,9 @@ export const deletePharmacy = async (id) => {
     }
 };
 
-export const updatePharmacyRequest = async (data) => {
+export const updatePharmacyRequest = async (id, data) => {
     try {
-        await axios.put(`/admin/pharmacies/${data.id}`, data);
+        await axios.post(`/admin/pharmacies/${id}`, data);
     } catch (error) {
         console.error("Error deleting restaurant:", error);
         throw error;
@@ -104,9 +104,9 @@ export const deletemarket = async (id) => {
     }
 };
 
-export const updatemarketRequest = async (data) => {
+export const updatemarketRequest = async (id, data) => {
     try {
-        await axios.put(`/admin/supermarkets/${data.id}`, data);
+        await axios.post(`/admin/supermarkets/${id}`, data);
     } catch (error) {
         console.error("Error deleting restaurant:", error);
         throw error;
@@ -143,7 +143,7 @@ export const deleteEventDataHttpRequest = async (id) => {
 
 export const editEventDataHttpRequest = async (id, data) => {
     try {
-        await axios.put(`/admin/event-tickets/${id}`, data);
+        await axios.post(`/admin/event-tickets/${id}`, data);
     } catch (error) {
         console.error("Error updating event:", error);
         throw error;
@@ -171,7 +171,7 @@ export const saveCarToServer = async (data) => {
 }
 export const editCarDataHttpRequest = async (id, data) => {
     try {
-        await axios.put(`/admin/cars/${id}`, data);
+        await axios.post(`/admin/cars/${id}`, data);
     } catch (error) {
         console.error("Error updating event:", error);
         throw error;
@@ -287,3 +287,72 @@ export const saveFood = async (data) => {
         throw error;
     }
 }
+
+/* hotels */
+export const fetchHotels = async () => {
+    try {
+        const response = await axios.get("/admin/hotels");
+        return response.data.data;
+    } catch (error) {
+        console.error("Error fetching restaurants:", error);
+        throw error;
+    }
+};
+
+export const fetchHotelDetails = async (path) => {
+    try {
+        const response = await axios.get(`/admin${path}`);
+        return response.data.data;
+    } catch (error) {
+        console.error("Error fetching restaurants:", error);
+        throw error;
+    }
+};
+
+export const saveNewHotelHttpRequest = async (data) => {
+    try {
+        await axios.post("/admin/hotels", data);
+    } catch (error) {
+        console.error("Error saving restaurant:", error);
+        throw error;
+    }
+}
+
+export const editHotelDataHttpRequest = async (id, data) => {
+    try {
+        await axios.post(`/admin/hotels/${id}`, data);
+    } catch (error) {
+        console.error("Error deleting restaurant:", error);
+        throw error;
+    }
+}
+
+
+export const deleteHotelHttpRequest = async (id) => {
+    try {
+        await axios.delete(`/admin/hotels/${id}`);
+    } catch (error) {
+        console.error("Error deleting hotel:", error);
+        throw error;
+    }
+}
+
+export const addImgeToHotelGallery = async (id, data) => {
+    try {
+        await axios.post(`/admin/gallery/${id}`, data);
+    } catch (error) {
+        console.error("Error deleting restaurant:", error);
+        throw error;
+    }
+}
+
+
+export const deleteGalleryPhoto = async (id) => {
+    try {
+        await axios.delete(`/admin/gallery/${id}`);
+    } catch (error) {
+        console.error("Error deleting hotel:", error);
+        throw error;
+    }
+}
+

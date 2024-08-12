@@ -20,6 +20,12 @@
         ></v-list-item>
 
         <v-list-item
+          prepend-icon="mdi-home-city-outline"
+          to="/hotels"
+          title="Hotels"
+        ></v-list-item>
+
+        <v-list-item
           prepend-icon="mdi-silverware"
           title="Restuarants"
           to="/restuarants"
@@ -62,6 +68,7 @@
           to="/items"
           title="Items"
         ></v-list-item>
+        
       </v-list>
     </v-navigation-drawer>
 

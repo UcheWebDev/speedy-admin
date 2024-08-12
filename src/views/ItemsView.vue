@@ -46,7 +46,9 @@
               Sale Details
             </p>
 
-            <p class="mt-2 text-body-2">Qty : {{ item.stock_quantity }}</p>
+            <p class="mt-2 text-body-2">
+              Stock Status : {{ item.stock_quantity }}
+            </p>
             <p class="mt-2 text-body-2">Price : &#8358; {{ item.price }}</p>
           </v-col>
 
@@ -105,6 +107,7 @@
       :active-color="'primary'"
       :length="pageCount"
       :total-visible="7"
+      v-if="isLoadingRequest == false && items.length"
     ></v-pagination>
 
     <!--add data-->
@@ -147,12 +150,12 @@
             type="number"
             required
           ></v-text-field>
-          <v-text-field
+          <v-select
             v-model="formData.stock_quantity"
-            label="Stock Quantity"
-            type="number"
+            :items="['In Stock', 'Out Of Stock']"
+            label="Stock Status"
             required
-          ></v-text-field>
+          ></v-select>
           <v-file-input
             v-model="formData.image_url"
             label="Item Image"
@@ -258,7 +261,7 @@ const RequestDialog = ref(false);
 
 const valid = ref(false);
 const loading = ref(true);
-const isLoadingRequest = ref(false);
+const isLoadingRequest = ref(true);
 const selectedDataId = ref(null);
 
 const isEditMode = ref(false);
@@ -280,6 +283,7 @@ const pharmacies = ref([]);
 const supermarkets = ref([]);
 
 const router = useRouter();
+
 const errorHandler = new ErrorHandler(snackbar, router);
 const formattedTime = (dt) => {
   return formatDistanceToNow(new Date(dt), { addSuffix: true });
@@ -313,7 +317,7 @@ const formData = ref({
   volume: 0,
   pharmacy_id: 0,
   market_id: 0,
-  image_name: null,
+  // image_name: null,
   image_File: null,
 });
 
@@ -325,10 +329,7 @@ const priceRules = [
   (v) => !!v || "Price is required",
   (v) => v > 0 || "Price must be greater than zero",
 ];
-const stockQuantityRules = [
-  (v) => !!v || "Stock Quantity is required",
-  (v) => v >= 0 || "Stock Quantity must be non-negative",
-];
+const stockQuantityRules = [(v) => !!v || "Stock Status is required"];
 
 const weightRules = [(v) => !v || v > 0 || "Weight must be greater than zero"];
 const volumeRules = [(v) => !v || v > 0 || "Volume must be greater than zero"];
@@ -435,7 +436,7 @@ const resetForm = () => {
     volume: 0,
     pharmacy_id: 0,
     market_id: 0,
-    image_name: null,
+    // image_name: null,
     image_File: null,
   };
 };
@@ -512,7 +513,7 @@ const openDialog = (item = null) => {
       volume: 0,
       pharmacy_id: 0,
       market_id: 0,
-      image_name: null,
+      // image_name: null,
       image_File: null,
     };
   }

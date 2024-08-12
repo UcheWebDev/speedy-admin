@@ -80,6 +80,7 @@
           @click="deleteRestuarant"
         ></v-btn>
         <v-btn
+          v-if="dataType !== 'hotel'"
           color="green"
           prepend-icon="mdi-eye"
           text="View"

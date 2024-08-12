@@ -2,8 +2,8 @@
   <div class="about pa-3">
     <div class="d-flex align-center justify-space-between">
       <div>
-        <div class="mb-3 text-grey">Restaurants</div>
-        <h1 class="text-h4 text-red-darken-4">Restaurants</h1>
+        <div class="mb-3 text-grey">Hotel</div>
+        <h1 class="text-h4 text-red-darken-4">Hotel</h1>
       </div>
       <v-btn color="primary" @click="openDialog" class="font-weight-bold">
         <v-icon left>mdi-plus</v-icon> Add
@@ -13,41 +13,132 @@
     <v-row class="mt-2" v-if="loading">
       <v-col cols="12" md="6" lg="4" sm="6" v-for="n in 4" :key="n">
         <v-skeleton-loader
-          :loading="loading && !restaurants.length"
+          :loading="loading && !hotels.length"
           type="image, list-item-two-line"
         >
         </v-skeleton-loader>
       </v-col>
     </v-row>
 
-    <v-row v-if="!loading && restaurants.length" class="mt-2">
+    <v-row v-if="!loading && hotels.length" class="mt-2">
       <v-col
         cols="12"
         md="6"
         lg="4"
         sm="6"
-        v-for="restaurant in restaurants"
-        :key="restaurant.id"
+        v-for="hotel in hotels"
+        :key="hotel.id"
       >
-        <DataCard
-          :dataType="'restuarant'"
-          :data="restaurant"
+        <v-hover v-slot="{ isHovering, props }">
+          <v-card
+            :class="{ 'on-hover': isHovering }"
+            :elevation="isHovering ? 16 : 0"
+            :disabled="loading"
+            :loading="loading"
+            class="mx-auto"
+            max-width="374"
+            flat
+            v-bind="props"
+          >
+            <v-img height="250" :src="hotel.hotel_imgurl" cover></v-img>
+
+            <v-card-item>
+              <v-card-title>{{ hotel.hotel_name }}</v-card-title>
+
+              <v-card-subtitle>
+                <span class="me-1">{{ hotel.hotel_location }}</span>
+                <v-icon
+                  color="error"
+                  icon="mdi-fire-circle"
+                  size="small"
+                ></v-icon>
+              </v-card-subtitle>
+            </v-card-item>
+
+            <v-card-text>
+              <v-row align="center" class="mx-0">
+                <v-rating
+                  :model-value="hotel.rating"
+                  color="amber"
+                  density="compact"
+                  size="small"
+                  half-increments
+                  readonly
+                ></v-rating>
+
+                <div class="text-grey ms-4">
+                  {{ hotel.rating }} ({{ hotel.hotel_likes }}) Likes
+                </div>
+              </v-row>
+
+              <v-divider class="mx-4 mb-1 mt-4"></v-divider>
+
+              <div>Price Per Night : &#8358; {{ hotel.price }}</div>
+
+              <div>
+                Address: {{ hotel.hotel_location }} <br />
+                Phone: {{ hotel.phone_number }}
+              </div>
+              <div class="mt-2">
+                Extra Description : {{ hotel.hotel_description }}
+              </div>
+
+              <v-chip-group>
+                <v-chip
+                  v-for="facility in JSON.parse(hotel.hotel_facilities)"
+                  :key="facility"
+                  >{{ facility }}</v-chip
+                >
+              </v-chip-group>
+            </v-card-text>
+
+            <div class="pa-3">
+              <v-btn
+                color="blue-darken-4"
+                prepend-icon="mdi-pen"
+                text="Edit"
+                slim
+                @click="openDialog(hotel)"
+                size=""
+                class="mr-2"
+              ></v-btn>
+              <v-btn
+                color="red-darken-4"
+                prepend-icon="mdi-delete"
+                text="Delete"
+                slim
+                class="mr-2"
+                size=""
+                @click="deleteHotel(hotel.id)"
+              ></v-btn>
+              <v-btn
+                color="primary"
+                prepend-icon="mdi-plus"
+                text="View"
+                slim
+                class="mr-2"
+                size=""
+                @click="viewHoteData(hotel.id)"
+              ></v-btn>
+            </div>
+          </v-card>
+        </v-hover>
+        <!-- <DataCard
+          :dataType="'hotel'"
+          :data="hotel"
           :selection="selection"
           @editItem="editRestuarantDetails"
           @deleteItem="deleteRestaurantData"
           @addFoodRestuarant="addFoodItemRestuarant"
           @viewItem="viewItemById"
-        />
+        /> -->
       </v-col>
     </v-row>
 
-    <div
-      class="centered-content"
-      v-if="loading == false && !restaurants.length"
-    >
+    <div class="centered-content" v-if="loading == false && !hotels.length">
       <div>
         <h1 class="text-h4 font-weight-bold mb-1">No data</h1>
-        <p>Restaurant data cannot be found at the moment</p>
+        <p>Hotel data cannot be found at the moment</p>
       </div>
     </div>
 
@@ -64,26 +155,23 @@
         @submit.prevent="saveRestaurant"
       >
         <v-file-input
-          v-model="formData.restuarant_image"
-          label="Upload Resturant Photo"
-          accept="image/jpeg, image/jpg, image/png"
-          prepend-icon="mdi-camera"
-          outlined
+          v-model="formData.image"
+          label="Upload Hotel Photo"
+          accept="image/*"
           @change="onFilePicked"
-          required
         ></v-file-input>
 
         <v-text-field
-          v-model="formData.restaurant_name"
-          label="Restaurant Name"
+          v-model="formData.hotel_name"
+          label="Hotel Name"
           :rules="nameRules"
         ></v-text-field>
 
         <v-text-field
-          label="Type a restuarant name or address"
+          label="Type a hotel name or address"
           ref="autocompleteInput"
           @input="onInput"
-          v-model="formData.restaurant_location"
+          v-model="formData.hotel_location"
           :rules="locationRules"
           clearable
           @click:clear="onClearLocationField"
@@ -118,6 +206,39 @@
           :rules="phoneRules"
           required
         ></v-text-field>
+
+        <v-text-field
+          v-model="formData.hotel_description"
+          label="Extra Description"
+          :rules="phoneRules"
+          required
+        ></v-text-field>
+
+        <v-text-field
+          v-model="formData.price"
+          label="Price Per Night"
+          :rules="phoneRules"
+          required
+        ></v-text-field>
+
+        <v-select
+          v-model="formData.hotel_facilities"
+          :items="facilities"
+          label="Hotel Facilities"
+          :prepend-icon="extraField ? 'mdi-minus' : 'mdi-plus'"
+          @click:prepend="addExtraInformation"
+          multiple
+          required
+        ></v-select>
+
+        <v-text-field
+          v-if="extraField"
+          label="Add extra table type"
+          v-model="extraFacilities"
+          append-icon="mdi-send-variant-outline"
+          @click:append="addToSelections"
+        ></v-text-field>
+
         <!--submit btn-->
         <v-btn
           class="mt-2"
@@ -126,76 +247,6 @@
           :disabled="!valid || isLoadingRequest"
         >
           Save
-        </v-btn>
-      </v-form>
-    </AddDataDialogue>
-
-    <!--add food to restuarant-->
-    <AddDataDialogue v-model="addFoodDialogue" @close="handleFoodDialogueClose">
-      <v-form ref="form" v-model="valid" lazy-validation>
-        <v-file-input
-          v-model="formData.restuarant_image"
-          label="Food Image"
-          accept="image/jpeg, image/jpg, image/png"
-          prepend-icon="mdi-camera"
-          outlined
-          @change="onFoodImgFilePicked"
-          required
-        ></v-file-input>
-        <v-select
-          v-model="food.food_type"
-          :items="foodTypes"
-          :prepend-icon="extraField ? 'mdi-minus' : 'mdi-plus'"
-          @click:prepend="addExtraInformation"
-          label="Food Type"
-          required
-        ></v-select>
-
-        <v-text-field
-          v-if="extraField"
-          label="Add extra food type"
-          v-model="extraFoods"
-          append-icon="mdi-send-variant-outline"
-          @click:append="addToSelections"
-        ></v-text-field>
-
-        <v-text-field
-          v-model="food.food_name"
-          :rules="[
-            (v) => !!v || 'Food Name is required',
-            (v) =>
-              v.length <= 255 || 'Food Name must be less than 255 characters',
-          ]"
-          label="Food Name"
-          required
-        ></v-text-field>
-
-        <v-text-field
-          v-model="food.food_price"
-          :rules="[
-            (v) => !!v || 'Food Price is required',
-            (v) =>
-              (!isNaN(parseFloat(v)) && v >= 0) ||
-              'Food Price must be a positive number',
-          ]"
-          label="Food Price"
-          required
-        ></v-text-field>
-
-        <v-textarea
-          v-model="food.extra_information"
-          :rules="[
-            (v) =>
-              v === null ||
-              v === '' ||
-              v.length <= 255 ||
-              'Extra Information must be less than 255 characters',
-          ]"
-          label="Extra Information"
-        ></v-textarea>
-
-        <v-btn :disabled="!valid" color="success" @click="addFoodHttpRequest">
-          Add Food
         </v-btn>
       </v-form>
     </AddDataDialogue>
@@ -242,8 +293,8 @@
     </v-dialog>
   </div>
 </template>
-
-<script setup>
+  
+  <script setup>
 /*eslint-disable*/
 import { ref, onMounted, reactive } from "vue";
 import { Loader } from "@googlemaps/js-api-loader";
@@ -251,17 +302,17 @@ import { ErrorHandler } from "@/utils/ErrorHandler";
 import { useRouter } from "vue-router";
 
 import {
-  fetchRestaurants,
+  fetchHotels,
   saveRestaurant,
-  deleteRestaurant,
-  updateRestuarantHttpRequest,
-  saveFood,
+  deleteHotelHttpRequest,
+  editHotelDataHttpRequest,
+  saveNewHotelHttpRequest,
 } from "@/utils/httpRequests";
 import DataCard from "@/components/DataCard.vue";
 import AddDataDialogue from "@/components/AddDataDialogue.vue";
-import { foodTypes } from "@/utils/globals";
 import { createFormData } from "@/utils/formData";
 
+const facilities = ref(["Wi-Fi", "Pool", "Gym", "Parking"]);
 const query = ref("");
 const suggestions = ref([]);
 const autocompleteService = ref(null);
@@ -285,18 +336,17 @@ const errorHandler = new ErrorHandler(snackbar, router);
 const loading = ref(true);
 const isLoadingRequest = ref(false);
 const selection = ref(1);
-const restaurants = ref([]);
-const extraFoods = ref(null);
+const hotels = ref([]);
 const extraField = ref(false);
+const extraFacilities = ref(null);
 
 const dialog = ref(false);
 const UpdateDialog = ref(false);
 const RequestDialog = ref(false);
-const addFoodDialogue = ref(false);
 
 const valid = ref(false);
 const form = ref(null);
-const isEditMode = ref(false);
+
 // const valid = ref(false);
 // const form = ref(null);
 
@@ -304,36 +354,37 @@ const liveLocationSwitch = ref(false);
 
 const selectedDataId = ref(null);
 
+const isEditMode = ref(false);
+const dialogTitle = ref("Add Hotel");
+const dialogButton = ref("Save");
+
 const formData = ref({
-  restaurant_name: "",
-  restaurant_location: "",
+  id: null,
+  hotel_name: "",
+  hotel_location: "",
+  hotel_description: "",
+  hotel_likes: "",
+  hotel_location: "",
+  price: "",
   phone_number: "",
-  restuarant_image_name: null,
-  restuarant_imageFile: null,
+  hotel_image_name: null,
+  hotel_imageFile: null,
   place_id: "",
-  restaurant_ratings: 0,
+  hotel_ratings: null,
+  hotel_facilities: [],
 });
-
-const food = ref({
-  restaurant_id: "",
-  food_type: "select",
-  food_name: "",
-  food_price: "",
-  extra_information: "",
-  food_img_name: null,
-  food_img_file: null,
-});
-
-const nameRules = [
-  (v) => !!v || "Restaurant name is required",
-  (v) => v.length <= 255 || "Name must be less than 255 characters",
-];
-
-const locationRules = [(v) => !!v || "Location is required"];
-
-const phoneRules = [(v) => !!v || "Phone number is required"];
 
 const openRequestDialogue = () => {
+  RequestDialog.value = true;
+};
+
+const closeRequestDialogue = () => {
+  selectedDataId.value = null;
+  RequestDialog.value = false;
+};
+
+const deleteHotel = (id) => {
+  selectedDataId.value = id;
   RequestDialog.value = true;
 };
 
@@ -342,24 +393,42 @@ const addExtraInformation = () => {
 };
 
 const addToSelections = () => {
-  foodTypes.value.push(extraFoods.value);
-  extraFoods.value = "";
+  facilities.value.push(extraFacilities.value);
+  extraFacilities.value = "";
   snackbar.message = "Extra Field added !";
   snackbar.show = true;
 };
 
-const closeRequestDialogue = () => {
-  selectedDataId.value = null;
-  RequestDialog.value = false;
-};
+// const openDialog = () => {
+//   resetForm();
+//   dialog.value = true;
+// };
 
-const handleFoodDialogueClose = () => {
-  resetAddFoodDialogueForm();
-  addFoodDialogue.value = false;
-};
+const openDialog = (hotel = null) => {
+  if (hotel && hotel.hotel_name) {
+    isEditMode.value = true;
+    dialogTitle.value = "Edit Hotel";
+    dialogButton.value = "Update";
 
-const openDialog = () => {
-  resetForm();
+    formData.value.id = hotel.id;
+    formData.value.hotel_name = hotel.hotel_name;
+    formData.value.hotel_imageFile = null;
+    formData.value.hotel_image_name = null;
+    formData.value.hotel_location = hotel.hotel_location;
+    formData.value.hotel_description = hotel.hotel_description;
+    formData.value.price = hotel.price;
+    formData.value.phone_number = hotel.phone_number;
+    formData.value.place_id = hotel.place_id;
+    formData.value.hotel_imgurl = hotel.hotel_imgurl;
+    formData.value.hotel_likes = hotel.hotel_likes;
+    formData.value.hotel_ratings = hotel.hotel_ratings;
+    formData.value.hotel_facilities = JSON.parse(hotel.hotel_facilities);
+  } else {
+    isEditMode.value = false;
+    dialogTitle.value = "Add Hotel";
+    dialogButton.value = "Save";
+    resetForm();
+  }
   dialog.value = true;
 };
 
@@ -371,37 +440,31 @@ const handleClose = () => {
 
 const resetForm = () => {
   formData.value = {
-    restaurant_name: "",
-    restaurant_location: "",
+    id: null,
+    hotel_name: "",
+    hotel_location: "",
+    hotel_description: "",
+    hotel_likes: "",
+    hotel_location: "",
+    price: "",
     phone_number: "",
-    restuarant_image_name: null,
-    restuarant_imageFile: null,
+    hotel_image_name: null,
+    hotel_imageFile: null,
     place_id: "",
-    restaurant_ratings: 0,
-  };
-};
-
-const resetAddFoodDialogueForm = () => {
-  food.value = {
-    restaurant_id: "",
-    food_type: "",
-    food_name: "",
-    food_price: "",
-    extra_information: "",
-    food_img_name: null,
-    food_img_file: null,
+    hotel_ratings: null,
+    hotel_facilities: [],
   };
 };
 
 const onClearLocationField = () => {
-  formData.value.restaurant_location = "";
+  formData.value.hotel_location = "";
   suggestions.value = [];
 };
 
-const fetchRestaurantsData = async () => {
+const fetchHotelsData = async () => {
   loading.value = true;
   try {
-    restaurants.value = await fetchRestaurants();
+    hotels.value = await fetchHotels();
   } catch (error) {
     errorHandler.handle(error);
   } finally {
@@ -409,24 +472,20 @@ const fetchRestaurantsData = async () => {
   }
 };
 
-const addFoodItemRestuarant = (restaurantId) => {
-  food.value.restaurant_id = restaurantId;
-  addFoodDialogue.value = true;
-};
-
 const saveRestaurantData = async () => {
   isLoadingRequest.value = true;
   try {
     const payLoad = createFormData(formData.value);
     if (formData.value.id) {
-      await updateRestuarantHttpRequest(formData.value.id, payLoad);
+      console.log(payLoad);
+      await editHotelDataHttpRequest(formData.value.id, payLoad);
       snackbar.message = "Updated successfully!";
     } else {
-      await saveRestaurant(payLoad);
+      await saveNewHotelHttpRequest(payLoad);
       snackbar.message = "Added successfully!";
     }
     snackbar.show = true;
-    fetchRestaurantsData();
+    fetchHotelsData();
   } catch (error) {
     errorHandler.handle(error);
   } finally {
@@ -434,63 +493,19 @@ const saveRestaurantData = async () => {
   }
 };
 
-const addFoodHttpRequest = async () => {
-  isLoadingRequest.value = true;
-  try {
-    const fd = new FormData();
-    for (const key in food.value) {
-      if (food.value[key] !== undefined) {
-        fd.append(key, food.value[key]);
-      } else {
-        console.log("invalid keys");
-      }
-    }
-    await saveFood(fd);
-    snackbar.message = "Added successfully!";
-    snackbar.show = true;
-  } catch (error) {
-    errorHandler.handle(error);
-  } finally {
-    isLoadingRequest.value = false;
-  }
+const viewHoteData = (hotelId) => {
+  router.push({ name: "HotelDetailsPage", params: { id: hotelId } });
 };
 
 const confirmEvent = async () => {
   try {
-    await deleteRestaurant(selectedDataId.value);
-    fetchRestaurantsData();
+    await deleteHotelHttpRequest(selectedDataId.value);
+    fetchHotelsData();
     closeRequestDialogue();
   } catch (error) {
-    snackbar.message = "Error deleting restaurant!";
+    snackbar.message = "Error deleting hotel!";
     snackbar.show = true;
   }
-};
-
-const deleteRestaurantData = (id) => {
-  selectedDataId.value = id;
-  openRequestDialogue();
-};
-
-const editRestuarantDetails = (data) => {
-  if (data && data.name) {
-    isEditMode.value = true;
-    formData.value.id = data.id;
-    formData.value.restaurant_name = data.name;
-    formData.value.restuarant_imageFile = null;
-    formData.value.restuarant_image_name = null;
-    formData.value.restaurant_location = data.location;
-    formData.value.phone_number = data.phone;
-    formData.value.place_id = data.place_id;
-    formData.value.restaurant_ratings = data.rating;
-  } else {
-    isEditMode.value = false;
-    resetForm();
-  }
-  dialog.value = true;
-};
-
-const viewItemById = (itemId) => {
-  router.push({ name: "RestuarantFoodItemPage", params: { id: itemId } });
 };
 
 /* map functions */
@@ -526,21 +541,18 @@ const onInput = (e) => {
 };
 
 const selectSuggestion = (suggestion) => {
-  formData.value.restaurant_location = suggestion.description;
+  formData.value.hotel_location = suggestion.description;
   suggestions.value = [];
   placesService.value.getDetails(
     { placeId: suggestion.place_id },
     (place, status) => {
       if (status === window.google.maps.places.PlacesServiceStatus.OK) {
         console.log(place);
-        formData.value.restaurant_name = place ? place.name : "";
+        formData.value.hotel_name = place ? place.name : "";
+        formData.value.hotel_location = place ? place.formatted_address : "";
         formData.value.phone_number = place ? place.formatted_phone_number : "";
-        formData.value.restaurant_location = place
-          ? place.formatted_address
-          : "";
-
         formData.value.place_id = place ? place.place_id : "";
-        formData.value.restaurant_ratings =
+        formData.value.hotel_ratings =
           place && place.rating !== undefined ? place.rating : 0;
       }
     }
@@ -551,39 +563,18 @@ const selectSuggestion = (suggestion) => {
 const onFilePicked = (e) => {
   const files = e.target.files;
   if (files[0] !== undefined) {
-    formData.value.restuarant_image_name = files[0].name;
-    if (formData.value.restuarant_image_name.lastIndexOf(".") <= 0) {
+    formData.value.hotel_image_name = files[0].name;
+    if (formData.value.hotel_image_name.lastIndexOf(".") <= 0) {
       return;
     }
     const fr = new FileReader();
     fr.readAsDataURL(files[0]);
     fr.addEventListener("load", () => {
-      formData.value.restuarant_imageFile = files[0];
-      console.log(formData.value.restuarant_imageFile);
+      formData.value.hotel_imageFile = files[0];
     });
   } else {
-    formData.value.restuarant_image_name = "";
-    formData.value.restuarant_imageFile = "";
-  }
-};
-
-/* food image validation */
-const onFoodImgFilePicked = (e) => {
-  const files = e.target.files;
-  if (files[0] !== undefined) {
-    food.value.food_img_name = files[0].name;
-    if (food.value.food_img_name.lastIndexOf(".") <= 0) {
-      return;
-    }
-    const fr = new FileReader();
-    fr.readAsDataURL(files[0]);
-    fr.addEventListener("load", () => {
-      food.value.food_img_file = files[0];
-      console.log(food.value.food_img_file);
-    });
-  } else {
-    food.value.food_img_name = "";
-    food.value.food_img_file = "";
+    formData.value.hotel_image_name = "";
+    formData.value.hotel_image_name = "";
   }
 };
 
@@ -592,16 +583,20 @@ onMounted(() => {
     .importLibrary("places")
     .then(initAutocompleteService)
     .catch((e) => console.error("Error loading Google Maps libraries:", e));
-  fetchRestaurantsData();
+  fetchHotelsData();
 });
 </script>
-
-<style scoped>
+  
+  <style scoped>
 /* Add some basic styling */
 .v-list {
   border: 1px solid #ccc;
   max-height: 200px;
   overflow-y: auto;
+}
+
+.v-card.on-hover.v-theme--dark {
+  background-color: rgba(#fff, 0.8);
 }
 
 .v-list-item {
@@ -620,4 +615,5 @@ onMounted(() => {
   text-align: center;
 }
 </style>
-
+  
+  

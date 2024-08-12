@@ -44,7 +44,7 @@
               }}
             </p>
 
-            <div class="d-flex justify-space-between">
+            <div class="d-flex justify-space-between mt-10">
               <p class="mt-2 text-body-2">
                 Time Added : {{ formattedTime(item.created_at) }}
               </p>
@@ -119,6 +119,7 @@
       :active-color="'primary'"
       :length="pageCount"
       :total-visible="7"
+      v-if="isLoadingRequest == false && items.length"
     ></v-pagination>
 
     <div

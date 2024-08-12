@@ -15,6 +15,11 @@ const routes = [
         component: () => import(/* webpackChunkName: "about" */ '../views/DashboardView.vue')
       },
       {
+        path: '/hotels',
+        name: 'Hotels',
+        component: () => import(/* webpackChunkName: "about" */ '../views/HotelsView.vue')
+      },
+      {
         path: '/restuarants',
         name: 'Restuarants',
         component: () => import(/* webpackChunkName: "about" */ '../views/RestuarantView.vue')
@@ -63,6 +68,11 @@ const routes = [
         path: '/restaurants/:id',
         name: 'RestuarantFoodItemPage',
         component: () => import(/* webpackChunkName: "about" */ '../views/RestuarantItemView.vue')
+      },
+      {
+        path: '/hotels/:id',
+        name: 'HotelDetailsPage',
+        component: () => import(/* webpackChunkName: "about" */ '../views/HotelDetailsPage.vue')
       }
     ],
   },

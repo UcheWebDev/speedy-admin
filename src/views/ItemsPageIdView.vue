@@ -37,7 +37,7 @@
               }}
             </p>
 
-            <div class="mt-2 d-flex justify-space-between">
+            <div class="mt-10 d-flex justify-space-between">
               <p class="mt-2 text-body-2">
                 Time added : {{ formattedTime(item.created_at) }}
               </p>
@@ -53,7 +53,7 @@
             </p>
 
             <p class="mt-2 text-body-2">
-              <span class="">Qty</span> :
+              <span class="">Stock Status</span> :
               {{ item.stock_quantity }}
             </p>
             <p class="mt-2 text-body-2">
@@ -122,6 +122,7 @@
       :active-color="'primary'"
       :length="pageCount"
       :total-visible="7"
+      v-if="isLoadingRequest == false && items.length"
     ></v-pagination>
 
     <!--add data-->
@@ -163,12 +164,17 @@
             type="number"
             required
           ></v-text-field>
-          <v-text-field
+          <!-- <v-text-field
             v-model="formData.stock_quantity"
             label="Stock Quantity"
-            type="number"
             required
-          ></v-text-field>
+          ></v-text-field> -->
+          <v-select
+            v-model="formData.stock_quantity"
+            :items="['In Stock', 'Out Of Stock']"
+            label="Stock Status"
+            required
+          ></v-select>
           <v-file-input
             v-model="formData.image_url"
             label="Item Image"
@@ -331,10 +337,7 @@ const priceRules = [
   (v) => !!v || "Price is required",
   (v) => v > 0 || "Price must be greater than zero",
 ];
-const stockQuantityRules = [
-  (v) => !!v || "Stock Quantity is required",
-  (v) => v >= 0 || "Stock Quantity must be non-negative",
-];
+const stockQuantityRules = [(v) => !!v || "Stock Status is required"];
 
 const weightRules = [(v) => !v || v > 0 || "Weight must be greater than zero"];
 const volumeRules = [(v) => !v || v > 0 || "Volume must be greater than zero"];
