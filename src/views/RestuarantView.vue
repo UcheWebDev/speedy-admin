@@ -311,6 +311,8 @@ const formData = ref({
   restuarant_image_name: null,
   restuarant_imageFile: null,
   place_id: "",
+  latitude: null,
+  longitude: null,
   restaurant_ratings: 0,
 });
 
@@ -377,6 +379,8 @@ const resetForm = () => {
     restuarant_image_name: null,
     restuarant_imageFile: null,
     place_id: "",
+    latitude: null,
+    longitude: null,
     restaurant_ratings: 0,
   };
 };
@@ -481,6 +485,8 @@ const editRestuarantDetails = (data) => {
     formData.value.restaurant_location = data.location;
     formData.value.phone_number = data.phone;
     formData.value.place_id = data.place_id;
+    formData.value.latitude = data.latitude;
+    formData.value.longitude = data.longitude;
     formData.value.restaurant_ratings = data.rating;
   } else {
     isEditMode.value = false;
@@ -542,6 +548,13 @@ const selectSuggestion = (suggestion) => {
         formData.value.place_id = place ? place.place_id : "";
         formData.value.restaurant_ratings =
           place && place.rating !== undefined ? place.rating : 0;
+        const location = place.geometry?.location;
+        if (location) {
+          formData.value.latitude = location.lat();
+          formData.value.longitude = location.lng();
+        } else {
+          console.error("Geometry data is not available.");
+        }
       }
     }
   );

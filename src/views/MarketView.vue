@@ -124,83 +124,6 @@
       </v-form>
     </AddDataDialogue>
 
-    <!-- Update market Modal -->
-    <AddDataDialogue
-      v-model="UpdateDialog"
-      title="Update market"
-      @close="handleClose"
-    >
-      <v-form
-        ref="form"
-        v-model="valid"
-        lazy-validation
-        @submit.prevent="savemarket"
-      >
-        <v-text-field
-          v-model="updateFormData.market_name"
-          label="market Name"
-          :rules="nameRules"
-          required
-        ></v-text-field>
-
-        <!-- <v-text-field
-              v-model="updateFormData.restaurant_location"
-              label="Restaurant Location"
-              :rules="locationRules"
-              required
-            ></v-text-field> -->
-
-        <v-text-field
-          label="Type a restuarant name or address"
-          ref="autocompleteInput"
-          @input="onInput"
-          v-model="updateFormData.market_location"
-          :rules="locationRules"
-          clearable
-          @click:clear="onClearLocationField"
-        ></v-text-field>
-
-        <v-list v-if="suggestions.length">
-          <v-list-item
-            v-for="suggestion in suggestions"
-            :key="suggestion.place_id"
-            @click="selectSuggestion(suggestion)"
-          >
-            <v-list-item-content>
-              <v-list-item-title>{{
-                suggestion.description
-              }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-
-        <v-switch
-          class="mb-2"
-          color="primary"
-          v-model="liveLocationSwitch"
-          label="Use live location filter"
-          hide-details
-          inset
-        ></v-switch>
-
-        <v-text-field
-          v-model="updateFormData.phone_number"
-          label="Phone Number"
-          :rules="phoneRules"
-          required
-        ></v-text-field>
-        <!--submit btn-->
-        <v-btn
-          class="mt-2"
-          color="primary darken-1"
-          @click="updateResturantData"
-          :disabled="!valid || isLoadingRequest"
-        >
-          Update
-        </v-btn>
-      </v-form>
-    </AddDataDialogue>
-
     <!--snackbar -->
     <v-snackbar v-model="snackbar.show" :timeout="snackbar.timeout">
       {{ snackbar.message }}
@@ -304,18 +227,9 @@ const formData = ref({
   market_image_name: null,
   market_imageFile: null,
   place_id: "",
+  latitude: null,
+  longitude: null,
   market_ratings: 0,
-});
-
-const updateFormData = ref({
-  market_name: "",
-  market_location: "",
-  phone_number: "",
-  market_image_name: null,
-  market_imageFile: null,
-  place_id: "",
-  market_ratings: 0,
-  id: null,
 });
 
 const nameRules = [
@@ -360,6 +274,8 @@ const resetForm = () => {
     market_image_name: null,
     market_imageFile: null,
     place_id: "",
+    latitude: null,
+    longitude: null,
     market_ratings: 0,
   };
 };
@@ -424,6 +340,8 @@ const editRestuarantDetails = (data) => {
     formData.value.market_location = data.location;
     formData.value.phone_number = data.phone;
     formData.value.place_id = data.place_id;
+    formData.value.latitude = data.latitude;
+    formData.value.longitude = data.longitude;
     formData.value.market_ratings = data.rating;
   } else {
     isEditMode.value = false;
@@ -479,6 +397,13 @@ const selectSuggestion = (suggestion) => {
         formData.value.place_id = place ? place.place_id : "";
         formData.value.market_ratings =
           place && place.rating !== undefined ? place.rating : 0;
+        const location = place.geometry?.location;
+        if (location) {
+          formData.value.latitude = location.lat();
+          formData.value.longitude = location.lng();
+        } else {
+          console.error("Geometry data is not available.");
+        }
       }
     }
   );

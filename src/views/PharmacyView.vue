@@ -225,6 +225,8 @@ const formData = ref({
   pharmacy_image_name: null,
   pharmacy_imageFile: null,
   place_id: "",
+  latitude: null,
+  longitude: null,
   pharmacy_ratings: 0,
 });
 
@@ -265,6 +267,8 @@ const resetForm = () => {
     pharmacy_image_name: null,
     pharmacy_imageFile: null,
     place_id: "",
+    latitude: null,
+    longitude: null,
     pharmacy_ratings: 0,
   };
 };
@@ -335,6 +339,8 @@ const editRestuarantDetails = (data) => {
     formData.value.pharmacy_location = data.location;
     formData.value.phone_number = data.phone;
     formData.value.place_id = data.placeId;
+    formData.value.latitude = data.latitude;
+    formData.value.longitude = data.longitude;
     formData.value.pharmacy_ratings = data.rating;
   } else {
     isEditMode.value = false;
@@ -391,6 +397,13 @@ const selectSuggestion = (suggestion) => {
         formData.value.place_id = place ? place.place_id : "";
         formData.value.pharmacy_ratings =
           place && place.rating !== undefined ? place.rating : 0;
+        const location = place.geometry?.location;
+        if (location) {
+          formData.value.latitude = location.lat();
+          formData.value.longitude = location.lng();
+        } else {
+          console.error("Geometry data is not available.");
+        }
       }
     }
   );

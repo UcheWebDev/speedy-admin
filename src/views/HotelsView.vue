@@ -371,6 +371,8 @@ const formData = ref({
   hotel_imageFile: null,
   place_id: "",
   hotel_ratings: null,
+  latitude: null,
+  longitude: null,
   hotel_facilities: [],
 });
 
@@ -422,6 +424,8 @@ const openDialog = (hotel = null) => {
     formData.value.hotel_imgurl = hotel.hotel_imgurl;
     formData.value.hotel_likes = hotel.hotel_likes;
     formData.value.hotel_ratings = hotel.hotel_ratings;
+    formData.value.latitude = hotel.latitude;
+    formData.value.longitude = hotel.longitude;
     formData.value.hotel_facilities = JSON.parse(hotel.hotel_facilities);
   } else {
     isEditMode.value = false;
@@ -452,6 +456,8 @@ const resetForm = () => {
     hotel_imageFile: null,
     place_id: "",
     hotel_ratings: null,
+    latitude: null,
+    longitude: null,
     hotel_facilities: [],
   };
 };
@@ -554,6 +560,13 @@ const selectSuggestion = (suggestion) => {
         formData.value.place_id = place ? place.place_id : "";
         formData.value.hotel_ratings =
           place && place.rating !== undefined ? place.rating : 0;
+        const location = place.geometry?.location;
+        if (location) {
+          formData.value.latitude = location.lat();
+          formData.value.longitude = location.lng();
+        } else {
+          console.error("Geometry data is not available.");
+        }
       }
     }
   );
