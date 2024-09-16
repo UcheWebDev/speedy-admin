@@ -11,7 +11,7 @@
       </v-btn>
     </div>
 
-    <v-card class="mt-3" flat>
+    <v-card class="mt-3" elevation="1">
       <template v-slot:text>
         <v-text-field
           v-model="search"
@@ -62,7 +62,11 @@
                     class="mr-1 mb-1"
                     ><v-icon>mdi-pen</v-icon></v-btn
                   >
-                  <v-btn color="success" size="small" class="mr-1 mb-1"
+                  <v-btn
+                    color="success"
+                    size="small"
+                    class="mr-1 mb-1"
+                    @click="openOrderAssignmentDialog(item)"
                     ><v-icon>mdi-account-arrow-down</v-icon></v-btn
                   >
                   <v-btn
@@ -143,7 +147,9 @@
         <v-card-title class="text-button">
           {{ prompt }}
         </v-card-title>
-        <v-card-text class="text-button">Confirm to suspend/unsuspend rider?</v-card-text>
+        <v-card-text class="text-button"
+          >Confirm to suspend/unsuspend rider?</v-card-text
+        >
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="green darken-1" text @click="closeRequestDialogue">
@@ -157,6 +163,33 @@
               </span>
             </template>
           </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="assignRiderDialog" max-width="500">
+      <v-card>
+        <v-card-title class="text-h6 pa-6">Assign Rider to Order</v-card-title>
+        <v-card-text>
+          <v-form v-model="valid">
+            <v-select
+              v-model="selectedOrder"
+              :items="orders"
+              label="Select Order"
+              item-title="reference"
+              @update:modelValue="updateSelectedOrder"
+              required
+            />
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="green darken-1" text @click="assignRider">
+            Assign
+          </v-btn>
+          <v-btn color="red darken-1" text @click="assignRiderDialog = false"
+            >Cancel</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -174,6 +207,8 @@ import {
   editRiderDataHttpRequest,
   deleteRiderDataHttpRequest,
   suspendRider,
+  fetchActiveOrdersHttpRequest,
+  assignRiderHttpRequest,
 } from "@/utils/httpRequests";
 import AddDataDialogue from "@/components/AddDataDialogue.vue";
 
@@ -197,15 +232,20 @@ const search = ref("");
 
 const dialog = ref(false);
 const RequestDialog = ref(false);
+const assignRiderDialog = ref(false);
 
 const valid = ref(false);
 const loading = ref(true);
 const isLoadingRequest = ref(true);
 const selectedDataId = ref(null);
+const selectedOrder = ref(null);
+const selectdeRiderId = ref(null);
 
 const isEditMode = ref(false);
 const dialogTitle = ref("Add Event");
 const dialogButton = ref("Save");
+
+const orders = ref([]);
 
 const snackbar = reactive({
   show: false,
@@ -240,10 +280,21 @@ const handleClose = () => {
   resetForm();
 };
 
+const fetchActiveOrders = async () => {
+  try {
+    isLoadingRequest.value = true;
+    const response = await fetchActiveOrdersHttpRequest();
+    orders.value = response;
+  } catch (err) {
+    isLoadingRequest.value = false;
+    snackbar.message = "error fetching orders!";
+  } finally {
+    isLoadingRequest.value = false;
+  }
+};
+
 const openDialog = (rider = null) => {
   if (rider && rider.riders_name) {
-    console.log("edit mode");
-
     isEditMode.value = true;
     dialogTitle.value = "Edit Rider";
     dialogButton.value = "Update";
@@ -262,6 +313,11 @@ const openDialog = (rider = null) => {
     console.log("saving mode");
   }
   dialog.value = true;
+};
+
+const openOrderAssignmentDialog = (item) => {
+  assignRiderDialog.value = true;
+  selectdeRiderId.value = item.id;
 };
 
 const deleteCarData = (id) => {
@@ -331,6 +387,27 @@ const confirmSuspensionAction = async () => {
   }
 };
 
+const updateSelectedOrder = async (orderId) => {
+  selectedOrder.value = orderId;
+};
+
+const assignRider = async () => {
+  try {
+    isLoadingRequest.value = true;
+    await assignRiderHttpRequest(selectedOrder.value, selectdeRiderId.value);
+    assignRiderDialog.value = false;
+    fetchRiders();
+    snackbar.message = `rider assigned`;
+    snackbar.show = true;
+  } catch (err) {
+    isLoadingRequest.value = false;
+    snackbar.message = `${err.message}`;
+    snackbar.show = true;
+  } finally {
+    loading.value = false;
+  }
+};
+
 const confirmDeleteEvent = async () => {
   isLoadingRequest.value = true;
   try {
@@ -347,6 +424,7 @@ const confirmDeleteEvent = async () => {
 
 onMounted(() => {
   fetchRiders();
+  fetchActiveOrders();
 });
 </script>
     

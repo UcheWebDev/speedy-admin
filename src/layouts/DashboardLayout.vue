@@ -60,6 +60,7 @@
           title="Riders"
         ></v-list-item>
         <v-list-item
+          to="/orders"
           prepend-icon="mdi-order-bool-descending-variant"
           title="Orders"
         ></v-list-item>
@@ -68,7 +69,6 @@
           to="/items"
           title="Items"
         ></v-list-item>
-        
       </v-list>
     </v-navigation-drawer>
 

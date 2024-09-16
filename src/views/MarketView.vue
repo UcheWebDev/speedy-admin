@@ -438,8 +438,7 @@ onMounted(() => {
 });
 </script>
     
-    <style scoped>
-/* Add some basic styling */
+<style scoped>
 .v-list {
   border: 1px solid #ccc;
   max-height: 200px;

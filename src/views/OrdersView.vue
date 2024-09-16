@@ -1,35 +1,8 @@
 <template>
   <div class="about pa-3">
-    <div class="d-flex align-center justify-space-between">
-      <div>
-        <div class="text-dark pa-4">Analytics</div>
-        <!-- <h1 class="text-h4 text-red-darken-4">Dashboard</h1> -->
-      </div>
-      <v-btn color="primary" @click="refreshData"> Refresh </v-btn>
-    </div>
-    <v-row class="mt-3">
-      <v-col
-        cols="6"
-        md="6"
-        lg="4"
-        sm="6"
-        v-for="(stat, index) in stats"
-        :key="index"
-      >
-        <v-sheet class="pa-4" rounded elevation="1">
-          <div class="d-flex flex-column align-center justify-center">
-            <div>
-              <div class="title text-h5 text-center">{{ stat.value }}</div>
-              <p class="headline text-capitalize">{{ stat.label }}</p>
-            </div>
-          </div>
-        </v-sheet>
-      </v-col>
-    </v-row>
-
     <v-row>
       <v-col cols="12">
-        <v-card-text>Todays Orders</v-card-text>
+        <v-card-text>All Orders</v-card-text>
 
         <v-card class="mt-3" elevation="1">
           <template v-slot:text>
@@ -61,8 +34,8 @@
                     <v-chip
                       :color="
                         item[header.key] === 'completed' ||
-                        item[header.key] === 'accepted'
-                          ? 'green'
+                        item[header.key] === 'delivered'
+                          ? 'success'
                           : 'red'
                       "
                       dark
@@ -73,20 +46,30 @@
                   <template v-else-if="header.key === 'Actions'">
                     <div class="mt-1">
                       <v-btn
-                        color="primary"
+                        color="success"
                         size="small"
                         @click="openDialog(item)"
                         class="mr-1 mb-1"
-                        >update</v-btn
                       >
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
 
+                      <v-btn
+                        color="warning"
+                        class="mr-1 mb-1"
+                        size="small"
+                        @click="cancelOrder(item.id)"
+                      >
+                        <v-icon>mdi-cancel</v-icon>
+                      </v-btn>
                       <v-btn
                         color="error"
                         class="mb-1"
                         size="small"
-                        @click="cancelOrder(item.id)"
-                        >cancel</v-btn
+                        @click="deleteOrder(item.id)"
                       >
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
                     </div>
                   </template>
                   <template v-else>
@@ -98,6 +81,7 @@
           </v-data-table>
         </v-card>
       </v-col>
+
       <v-snackbar v-model="snackbar.show" :timeout="snackbar.timeout">
         {{ snackbar.message }}
       </v-snackbar>
@@ -133,7 +117,7 @@
                 <!-- Render step content based on current step -->
                 <div v-if="currentStep === 0">
                   <div>
-                    <h3>Customer details</h3>
+                    <h2>Customer details</h2>
                     <div class="d-flex justify-space-between">
                       <p>Customer Name</p>
                       <p>{{ selectedOrder.customer_name }}</p>
@@ -149,7 +133,7 @@
                   </div>
 
                   <div class="mt-2">
-                    <h3>Orders details</h3>
+                    <h2>Orders details</h2>
                     <v-form ref="editForm">
                       <v-list>
                         <v-list-item
@@ -265,22 +249,7 @@
                     </v-list>
                   </v-form>
                 </div>
-
-                <!-- <div v-else-if="currentStep === 2">
-                  <h2>Complete Your Order</h2>
-                </div> -->
               </div>
-              <!-- <div class="stepper-footer">
-                <button @click="prevStep" :disabled="currentStep === 0">
-                  Previous
-                </button>
-                <button
-                  @click="nextStep"
-                  :disabled="currentStep === steps.length - 1"
-                >
-                  Next
-                </button>
-              </div> -->
             </div>
           </v-card-text>
           <v-card-actions>
@@ -321,12 +290,12 @@
 /* eslint-disable */
 import axios from "@/utils/axiosConfig";
 import { ref, onMounted, reactive } from "vue";
-import { useRouter } from "vue-router";
-
 import {
   updateOrderDetails,
   cancelOrderHttpRequest,
+  deleteOrderHttpRequest,
 } from "@/utils/httpRequests";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 
@@ -336,8 +305,7 @@ const snackbar = reactive({
   timeout: 3000,
 });
 
-const updateLoading = ref(false); // Loading state
-
+const updateLoading = ref(false);
 const currentStep = ref(0);
 const steps = [{ title: "Review Order" }, { title: "Customize Order" }];
 const search = ref("");
@@ -346,45 +314,28 @@ const selectedOrder = ref({});
 const parsedItems = ref([]);
 
 const loading = ref(true);
-const stats = ref([
-  { value: 0, label: "Total customers" },
-  { value: 0, label: "Total Restaurants" },
-  { value: 0, label: "Total Pharmacy" },
-  { value: 0, label: "Total Supermarkets" },
-  { value: 0, label: "Total riders" },
-  { value: 0, label: "Total orders" },
-  { value: 0, label: "Total Hotels" },
-  { value: 0, label: "Total Orders" },
-]);
+
 const orders = ref([]);
 const headers = [
-  { key: "id", title: "Order ID" },
+  { key: "id", title: "S/N" },
   { key: "payment_status", title: "Payment Status" },
   { key: "delivery_status", title: "Delivery Status" },
   { key: "reference", title: "Order Ref" },
   { key: "Actions", title: "Actions" },
 ];
 
-const getAnalytics = async () => {
+const fetchOrders = async () => {
   try {
-    const response = await axios.get("/admin/admin");
-    const data = response.data.data.analytics;
-    stats.value = [
-      { value: data.totalCustomers, label: "Total customers" },
-      { value: data.totalRestaurants, label: "Total Restaurants" },
-      { value: data.totalPharmacy, label: "Total Pharmacy" },
-      { value: data.totalSupermarkets, label: "Total Supermarkets" },
-      { value: data.totalRiders, label: "Total riders" },
-      { value: data.totalOrders, label: "Total orders" },
-      { value: data.totalCars, label: "Total cars" },
-      { value: data.totalHotels, label: "Total Hotels" },
-    ];
-    orders.value = response.data.data.orders;
+    const response = await axios.get("/admin/fetchOrders");
+    orders.value = response.data.orders;
   } catch (error) {
     if (error && error.response && error.response.status === 401) {
       localStorage.removeItem("token");
       router.push({ name: "Login" });
       return;
+    } else if (error && error.response && error.response.status === 404) {
+      snackbar.message = "Requested resource not found on server !";
+      snackbar.show = true;
     } else if (error && error.response) {
       snackbar.message = "An Unexpected error Occured!!";
       snackbar.show = true;
@@ -396,6 +347,7 @@ const getAnalytics = async () => {
     loading.value = false;
   }
 };
+
 const openDialog = (order) => {
   selectedOrder.value = { ...order };
   try {
@@ -424,7 +376,7 @@ const updateOrder = async () => {
     snackbar.message = "order processed !";
     snackbar.show = true;
     updateLoading.value = false;
-    getAnalytics();
+    fetchOrders();
   } catch (error) {
     snackbar.message = "Error updating order:";
     snackbar.show = true;
@@ -448,9 +400,19 @@ const cancelOrder = async (orderId) => {
   }
 };
 
-const refreshData = () => {
+const deleteOrder = async (orderId) => {
   loading.value = true;
-  getAnalytics();
+  try {
+    await deleteOrderHttpRequest(orderId);
+    fetchOrders();
+    loading.value = false;
+    snackbar.message = "order deleted !";
+    snackbar.show = true;
+  } catch (error) {
+    loading.value = false;
+    snackbar.message = "Error deleting order:";
+    snackbar.show = true;
+  }
 };
 
 const nextStep = () => {
@@ -466,7 +428,7 @@ const prevStep = () => {
 };
 
 onMounted(() => {
-  getAnalytics();
+  fetchOrders();
 });
 </script>
 

@@ -401,10 +401,6 @@ const addToSelections = () => {
   snackbar.show = true;
 };
 
-// const openDialog = () => {
-//   resetForm();
-//   dialog.value = true;
-// };
 
 const openDialog = (hotel = null) => {
   if (hotel && hotel.hotel_name) {

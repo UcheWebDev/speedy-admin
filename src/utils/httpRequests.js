@@ -356,3 +356,54 @@ export const deleteGalleryPhoto = async (id) => {
     }
 }
 
+
+export const updateOrderDetails = async (id, data) => {
+    try {
+        await axios.put(`/admin/orders/${id}`, data);
+    } catch (error) {
+        console.error("Error deleting hotel:", error);
+        throw error;
+    }
+}
+
+export const cancelOrderHttpRequest = async (id) => {
+    try {
+        await axios.put(`/admin/cancelorders/${id}`, {});
+    } catch (error) {
+        console.error("Error cancelling order:", error);
+        throw error;
+    }
+}
+
+export const deleteOrderHttpRequest = async (id) => {
+    try {
+        await axios.delete(`/admin/orders/${id}`);
+    } catch (error) {
+        console.error("Error deleting hotel:", error);
+        throw error;
+    }
+}
+
+
+export const fetchActiveOrdersHttpRequest = async () => {
+    try {
+        const response = await axios.get(`/admin/activeOrders`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching restaurants:", error);
+        throw error;
+    }
+};
+
+export const assignRiderHttpRequest = async (orderId, riderId) => {
+    try {
+        const response = await axios.post(`/admin/orders/assign-rider`, {
+            rider_id: riderId,
+            order_id: orderId
+        })
+        return response.data
+    } catch (error) {
+        console.error("Error assigning rider:", error);
+        throw error;
+    }
+}
