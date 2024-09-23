@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-    baseURL: 'https://speedyapp.ng/api/v1/',
+    baseURL: 'https://backend.speedyapp.ng/api/v1/',
     // baseURL: 'http://speedy-api.test/api/v1/',
 
 });

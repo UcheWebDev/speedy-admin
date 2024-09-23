@@ -2,13 +2,18 @@
   <v-app>
     <v-navigation-drawer app v-model="drawer">
       <v-list>
-        <v-list-item>
-          <v-list-item-content>
-            <v-list-item-title class="title text-red text-uppercase"
-              >Speedy</v-list-item-title
-            >
-          </v-list-item-content>
-        </v-list-item>
+        <v-row align="center" no-gutters class="justify-center">
+          <v-col class="d-flex" cols="auto">
+            <v-list-item-avatar>
+              <img src="../assets/logo-speedy (1).svg" alt="Speedy Logo" />
+            </v-list-item-avatar>
+          </v-col>
+          <v-col class="d-flex ml-2" cols="auto">
+            <v-list-item-title class="title text-uppercase speedy-theme">
+              Speedy
+            </v-list-item-title>
+          </v-col>
+        </v-row>
 
         <v-divider></v-divider>
 
@@ -174,5 +179,9 @@ const logOut = async () => {
   line-height: 1.5;
   letter-spacing: 0.00938em;
 } */
+.speedy-theme{
+  color: #d13520;
+  font-weight: 900;
+}
 </style>
   
