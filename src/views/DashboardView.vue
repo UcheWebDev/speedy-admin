@@ -160,7 +160,7 @@
                           <div class="d-flex justify-space-between">
                             <v-list-item-content>
                               <v-list-item-title
-                                >{{ item.food_name }} ({{
+                                >{{ item.food_name || item.name }} ({{
                                   item.quantity
                                 }})</v-list-item-title
                               >
@@ -168,20 +168,22 @@
                               <v-list-item-subtitle
                                 class="text-uppercase font-weight-bold text-dark"
                               >
-                                {{ item.restaurant_name }}
+                                {{ item.restaurant_name || item.market_name }}
                               </v-list-item-subtitle>
                             </v-list-item-content>
 
                             <!-- End Slot (e.g., delivery fee or total price) -->
                             <v-list-item-content>
                               <v-list-item-subtitle>
-                                Price ₦{{ item.food_price }}
+                                Price ₦{{ item.food_price || item.price }}
                               </v-list-item-subtitle>
                               <v-list-item-subtitle>
                                 Qty : {{ item.quantity }}
                               </v-list-item-subtitle>
                               <v-list-item-title>
-                                Total: ₦{{ item.food_price * item.quantity }}
+                                Total: ₦{{
+                                  item.food_price || item.price * item.quantity
+                                }}
                               </v-list-item-title>
                               <v-list-item-subtitle> </v-list-item-subtitle>
                             </v-list-item-content>
@@ -207,16 +209,16 @@
                         <div class="d-flex justify-space-between">
                           <!-- Left side: food details and restaurant -->
                           <v-list-item-content>
-                            <v-list-item-title
-                              >{{ item.food_name }} ({{
+                            <v-list-item-title>
+                              {{ item.food_name || item.name }} ({{
                                 item.quantity
-                              }})</v-list-item-title
-                            >
+                              }})
+                            </v-list-item-title>
 
                             <v-list-item-subtitle
                               class="text-uppercase font-weight-bold text-dark"
                             >
-                              {{ item.restaurant_name }}
+                              {{ item.restaurant_name || item.market_name }}
                             </v-list-item-subtitle>
                             <!-- Remove Button -->
                             <v-btn
@@ -233,7 +235,17 @@
                           <v-list-item-content>
                             <!-- Editable Price -->
                             <v-text-field
+                              v-if="item.food_price"
                               v-model="item.food_price"
+                              label="Price"
+                              outlined
+                              dense
+                              type="number"
+                              prefix="₦"
+                            ></v-text-field>
+                            <v-text-field
+                              v-if="item.price"
+                              v-model="item.price"
                               label="Price"
                               outlined
                               dense
@@ -252,7 +264,9 @@
 
                             <!-- Auto-calculated total price -->
                             <v-list-item-title>
-                              Total: ₦{{ item.food_price * item.quantity }}
+                              Total: ₦{{
+                                (item.food_price || item.price) * item.quantity
+                              }}
                             </v-list-item-title>
                           </v-list-item-content>
                         </div>
@@ -320,7 +334,7 @@
 <script setup>
 /* eslint-disable */
 import axios from "@/utils/axiosConfig";
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, computed } from "vue";
 import { useRouter } from "vue-router";
 
 import {
@@ -338,12 +352,21 @@ const snackbar = reactive({
 
 const updateLoading = ref(false); // Loading state
 
+const itemPrice = (item) => {
+  return item.food_price || item.item_price || 0; // Default to 0 if neither price exists
+};
+
 const currentStep = ref(0);
 const steps = [{ title: "Review Order" }, { title: "Customize Order" }];
 const search = ref("");
 const dialog = ref(false);
 const selectedOrder = ref({});
 const parsedItems = ref([]);
+
+// Computed property for item prices
+const itemPrices = computed((item) => {
+  return item?.price;
+});
 
 const loading = ref(true);
 const stats = ref([
